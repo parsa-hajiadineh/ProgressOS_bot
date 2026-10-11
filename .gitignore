@@ -36,3 +36,10 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Internal development notes
+.ai/
+
+# Local environment overrides
+.env.*
+!.env.example

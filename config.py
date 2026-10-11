@@ -106,16 +106,16 @@ SHEET_DEFINITIONS = {
     "code", "level1_percent", "level2_percent", "max_uses",
     "used_count", "valid_until", "created_by", "created_at", "status"
     ],
-    "Affiliates": [  # ← شیت جدید
-        "telegram_id",      # ID افیلیت
-        "username",         # یوزرنیم
-        "full_name",        # نام کامل
-        "max_depth",        # حداکثر سطح (مثلاً ۱۰)
-        "rate_percent",     # نرخ پورسانت برای سطح ۳+ (مثلاً ۵)
+    "Affiliates": [
+        "telegram_id",
+        "username",
+        "full_name",
+        "max_depth",
+        "rate_percent",
         "status",           # active / inactive
-        "created_at",       # تاریخ ساخت
-        "created_by",       # ادمینی که ساخته
-        "notes"             # یادداشت
+        "created_at",
+        "created_by",
+        "notes"
     ]
 }
 

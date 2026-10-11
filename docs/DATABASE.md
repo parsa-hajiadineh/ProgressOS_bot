@@ -54,10 +54,10 @@ The application uses a thin wrapper layer (`get_all_rows`, `append_row`, `update
 | `username` | string | Telegram username |
 | `product` | string | See product values below |
 | `amount_usd` | decimal string | USD amount |
-| `amount_irr` | decimal string | IRR equivalent at time of purchase |
+| `amount_irr` | decimal string | Toman equivalent at time of purchase (legacy field name) |
 | `payment_method` | string | `usdt` / `card` / `wallet` / `gift` |
 | `transaction_id` | string | User-submitted TX hash or receipt ref |
-| `admin_action` | string | Sheet-driven approval: `approve` / `reject` |
+| `admin_action` | string | Database-driven approval: `approve` / `reject` |
 | `status` | string | `pending` / `approved` / `rejected` |
 | `created_at` | ISO datetime | Submission timestamp |
 | `approved_at` | ISO datetime | Approval timestamp |
@@ -188,6 +188,10 @@ The application uses a thin wrapper layer (`get_all_rows`, `append_row`, `update
 
 ---
 
+## `user_states`
+
+Stores a unique `telegram_id`, JSONB `state_data`, and an `updated_at` timestamp, with an internal BIGSERIAL `id`. The schema includes this table. Existing installations can add it using `docs/migrations/001_create_user_states.sql`.
+
 ## Access Patterns
 - Reads: `get_all_rows()` → full table fetch ordered by `id`; `find_user()` → filtered query by `telegram_id`
 - Writes: `append_row()` → INSERT; `update_row()` → UPDATE WHERE id = ?
@@ -195,7 +199,7 @@ The application uses a thin wrapper layer (`get_all_rows`, `append_row`, `update
 - No foreign key enforcement (maintains backward compatibility with original design)
 
 ## Limitations
-- All column values stored as TEXT (for backward compatibility with string-based code)
+- Business columns are TEXT for compatibility; internal IDs use BIGSERIAL and user state uses JSONB
 - No transactions — concurrent writes can still cause race conditions
 - `get_all_rows()` fetches all rows for full-scan operations (same pattern as before)
 
@@ -203,4 +207,4 @@ The application uses a thin wrapper layer (`get_all_rows`, `append_row`, `update
 | Variable | Purpose |
 |----------|---------|
 | `SUPABASE_URL` | Supabase project URL (e.g. `https://xxxx.supabase.co`) |
-| `SUPABASE_KEY` | Supabase anon/public API key |
+| `SUPABASE_KEY` | Server-side API key with required table read/write permissions |

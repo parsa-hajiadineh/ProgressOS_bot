@@ -1,132 +1,43 @@
-# API.md — Bot Interface & External APIs
+# Bot interface and integrations
 
-## Telegram Bot Interface
+The Telegram interface is in Persian. Users enter through `/start` and navigate reply and inline keyboards for subscriptions, payments, wallet withdrawals, referrals, gift cards, and support tickets.
 
-### User Commands
-| Command | Parameters | Description |
-|---------|-----------|-------------|
-| `/start` | Optional: `CODE` (referral/gift deep link) | Entry point; registers user, handles referral & gift card links |
-| `/redeem CODE` | `CODE` = boost code | Secret boost activation for users |
+## Commands
 
-### Admin Commands
-| Command | Parameters | Description |
-|---------|-----------|-------------|
-| `/amiadmin` | — | Debug: prints admin status |
-| `/stats` | — | Quick system statistics |
-| `/dashboard` | — | Full admin dashboard with metrics |
-| `/reply TICKET_ID TEXT` | ticket ID + reply text | Reply to a support ticket |
-| `/msg USER_ID TEXT` | user ID + message text | Send a direct message to a user |
-| `/broadcast TEXT` | message text | Broadcast to all users (with confirmation step) |
-| `/msklist` | — | Filtered group messaging |
-| `/createcode CODE PERCENT MAX_USES VALID_UNTIL` | — | Create discount code |
-| `/listcodes` | — | List all discount codes |
-| `/createboost CODE L1% L2% MAX_USES VALID_UNTIL` | — | Create boost code |
-| `/listboosts` | — | List all boost codes |
-| `/makeaffiliate USER_ID MAX_DEPTH RATE%` | — | Grant affiliate status |
-| `/updateaffiliate USER_ID FIELD VALUE` | — | Update affiliate settings |
-| `/removeaffiliate USER_ID` | — | Remove affiliate status |
-| `/listaffiliates` | — | List all affiliates |
-| `/reset` | — | Clear own user state (debug) |
-| `/report` | — | User monthly report |
+| Command | Purpose |
+| --- | --- |
+| `/start` | Register or open the menu; accepts referral and `gift_CODE` deep links |
+| `/report` | Request a personal monthly report |
+| `/redeem CODE` | Redeem a boost code; hidden from the menus |
+| `/amiadmin` | Display administrator status |
+| `/stats`, `/dashboard` | Administrator statistics |
+| `/reply TICKET_ID TEXT` | Reply to a support ticket |
+| `/msg USER_ID TEXT` | Send a direct administrator message |
+| `/broadcast TEXT` | Preview and confirm a broadcast |
+| `/msklist` | Message a selected group of users |
+| `/createcode CODE PERCENT MAX_USES VALID_UNTIL`, `/listcodes` | Manage discount codes |
+| `/createboost CODE L1% L2% MAX_USES VALID_UNTIL`, `/listboosts` | Manage referral boost codes |
+| `/makeaffiliate USER_ID MAX_DEPTH RATE%` | Create an affiliate |
+| `/updateaffiliate USER_ID FIELD VALUE` | Update affiliate settings |
+| `/removeaffiliate USER_ID`, `/listaffiliates` | Deactivate or list affiliates |
+| `/reset` | Clear the administrator's own flow state |
 
-### Deep Link Formats
-| Format | Purpose |
-|--------|---------|
-| `t.me/BOT?start=REF_CODE` | Referral link — credits referrer on new registration |
-| `t.me/BOT?start=gift_GIFTCODE` | Gift card redemption link |
+Administrator menus also expose purchase and withdrawal approvals, user search, and USDT price configuration. Command argument guidance is available in the bot.
 
-### Reply Keyboard Menus
+## Integrations
 
-**User Main Menu:**
-- My Subscription
-- Buy Subscription
-- Wallet
-- Referral Program
-- Support
-- Profile
+### Telegram
 
-**Admin Menu (additional buttons when `is_admin`):**
-- System Stats
-- Pending Purchases
-- Pending Withdrawals
-- Broadcast
-- Discount Codes
-- Boost Codes
-- User Search
-- Set USDT Price
-- Affiliates
+aiogram 2.25.1 uses long polling. The bot needs administrator rights on subscription channels to create invite links and remove members. Membership checks use Telegram's chat membership API.
 
-### Inline Callback Actions
-Callback data patterns used throughout the bot:
+### Supabase
 
-| Pattern | Description |
-|---------|-------------|
-| `buy_normal` / `buy_premium` | Initiate subscription purchase |
-| `pay_usdt` / `pay_card` / `pay_wallet` | Select payment method |
-| `approve_purchase_ID` | Admin approves a purchase |
-| `reject_purchase_ID` | Admin rejects a purchase |
-| `approve_withdrawal_ID` | Admin approves a withdrawal |
-| `reject_withdrawal_ID` | Admin rejects a withdrawal |
-| `confirm_broadcast` | Admin confirms broadcast send |
-| `cancel_broadcast` | Admin cancels broadcast |
-| `apply_discount` | Apply discount code at checkout |
-| `skip_discount` | Skip discount code step |
-| `buy_test` | Start free 5-minute test |
-| `create_gift_normal` / `create_gift_premium` | Create gift card |
-| `redeem_gift_CODE` | Redeem a gift card |
-| `withdraw_usdt` / `withdraw_card` | Choose withdrawal method |
-| `confirm_withdrawal` | Confirm withdrawal request |
-| `reserve_normal` / `reserve_premium` | Start pre-payment reserve flow |
-| `complete_reserve` | Complete partial reserve payment |
+The Supabase client authenticates with `SUPABASE_URL` and `SUPABASE_KEY`. Tables must be created using [schema.sql](schema.sql), and the configured key must have the required read/write access. See [DATABASE.md](DATABASE.md).
 
----
+### Nobitex
 
-## External APIs
+The pricing helper first checks `usdt_price_irr` in the `config` table. Otherwise it requests `https://api.nobitex.ir/v2/orderbook/USDTIRT`, reads the first ask price, and divides it by ten to convert Rial to Toman. If the request or conversion fails, it falls back to 160,000 Toman.
 
-### Telegram Bot API
-- **Mode:** Long-polling (`executor.start_polling`)
-- **Library:** aiogram 2.25.1
-- **Permissions required on target channels:** Admin (to create invite links and ban/unban users)
+## HTTP health routes
 
-**Key operations:**
-- `bot.send_message(chat_id, text)` — send messages
-- `bot.send_photo(chat_id, photo)` — send receipt photos
-- `bot.create_chat_invite_link(chat_id, expire_date, member_limit)` — generate invite links
-- `bot.ban_chat_member(chat_id, user_id)` / `bot.unban_chat_member(chat_id, user_id)` — remove/restore channel access
-- `bot.get_chat_member(chat_id, user_id)` — verify membership status
-
----
-
-### Google Sheets API
-- **Library:** gspread 6.0.0 + google-auth 2.25.2
-- **Auth:** Service account JSON (`GOOGLE_CREDENTIALS` env var or `service-account.json` file)
-- **Scope:** `https://spreadsheets.google.com/feeds`, `https://www.googleapis.com/auth/drive`
-- **Access:** The spreadsheet must be shared with the service account email
-
-**Operations used:**
-- Open spreadsheet by ID
-- List worksheets
-- Add worksheet with header row
-- Get all values as list of dicts
-- Append row
-- Update row by index
-- Find cell by value
-
----
-
-### Nobitex REST API
-- **Purpose:** Fetch live USDT/IRR exchange rate
-- **Endpoint:** `GET https://api.nobitex.ir/v2/orderbook/USDTIRT`
-- **Field used:** `lastTradePrice` from response
-- **Fallback:** 160,000 Toman if request fails or rate is unavailable
-- **Override:** Admin can set `usdt_price_irr` key in the `Config` sheet to bypass live fetch
-
----
-
-## Health Check Endpoint
-- **Server:** aiohttp
-- **Port:** `$PORT` (default `8000`)
-- **Routes:**
-  - `GET /` → `200 OK` with body `"OK"`
-  - `GET /health` → `200 OK` with body `"OK"`
-- **Purpose:** Render platform health monitoring to keep service alive
+`GET /` and `GET /health` return status 200 with body `OK`. The server listens on `0.0.0.0` at `PORT` (default `8000`). These routes do not test Telegram or Supabase connectivity.

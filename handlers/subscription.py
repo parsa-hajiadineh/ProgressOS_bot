@@ -43,11 +43,11 @@ from main import (
 async def handle_buy_subscription(message: types.Message):
     """Buy subscription"""
     
-    # ✅ چک عضویت
+
     if not await check_membership_for_all_messages(message):
         return
       
-    # ✅ چک رزرو
+
     if not await check_reserve_block(message):
         return
 
@@ -87,10 +87,10 @@ async def callback_buy(callback: types.CallbackQuery):
 
 @dp.callback_query_handler(lambda c: c.data == "buy_reserve")
 async def callback_buy_reserve(callback: types.CallbackQuery):
-    """شروع پیش‌پرداخت"""
+    """Start a reservation purchase."""
     user = callback.from_user
     
-    # چک اگه قبلاً رزرو داره
+
     reserve = await get_user_reserve_status(user.id)
     if reserve["has_reserve"]:
         product_name = "ویژه" if reserve["product"] == "premium" else "معمولی"
@@ -109,7 +109,7 @@ async def callback_buy_reserve(callback: types.CallbackQuery):
         await callback.answer()
         return
     
-    # انتخاب محصول
+
     kb = InlineKeyboardMarkup(row_width=1)
     kb.add(
         InlineKeyboardButton(
@@ -141,11 +141,11 @@ async def callback_buy_reserve(callback: types.CallbackQuery):
 
 @dp.callback_query_handler(lambda c: c.data.startswith("reserve_"))
 async def callback_reserve_product(callback: types.CallbackQuery):
-    """انتخاب محصول برای رزرو"""
+    """Select the reservation product."""
     user = callback.from_user
     product = callback.data.replace("reserve_", "")  # normal or premium
     
-    # روش پرداخت
+
     kb = payment_method_keyboard(f"reserve_{product}")
     
     product_name = "ویژه" if product == "premium" else "معمولی"
@@ -168,7 +168,7 @@ async def callback_buy_gift(callback: types.CallbackQuery):
     """Buy gift card"""
     user = callback.from_user
     
-    # ✅ مورد ۱: چک اینکه کاربر قبلاً خرید کرده باشه
+
     purchases_rows = await get_all_rows("Purchases")
     has_purchased = False
     
@@ -176,9 +176,9 @@ async def callback_buy_gift(callback: types.CallbackQuery):
         if not row or len(row) < 10:
             continue
         
-        # چک اگه این کاربر خرید تایید شده داره
+
         if str(row[1]) == str(user.id) and row[9] == "approved":
-            # فقط خریدهای واقعی (نه هدیه) رو حساب کن
+
             product = row[3] if len(row) > 3 else ""
             if not product.startswith("gift_"):
                 has_purchased = True
@@ -191,7 +191,7 @@ async def callback_buy_gift(callback: types.CallbackQuery):
         )
         return
     
-    # ادامه کد عادی
+
     kb = InlineKeyboardMarkup(row_width=1)
     kb.add(
         InlineKeyboardButton(
@@ -246,7 +246,7 @@ async def callback_enter_discount(callback: types.CallbackQuery):
     
     user_states[user.id] = {"state": "awaiting_discount_code"}
     
-    # ✅ مورد ۳: اضافه دکمه بازگشت
+
     kb_back = InlineKeyboardMarkup()
     kb_back.add(InlineKeyboardButton("🔙 بازگشت", callback_data="back_to_buy"))
     
@@ -305,7 +305,7 @@ async def handle_gift_message(message: types.Message):
     
     gift_message = "" if message.text == "/skip" else message.text.strip()
     
-    # انتخاب روش پرداخت
+
     price_usd = NORMAL_PRICE if product == "normal" else PREMIUM_PRICE
     
     user_states[user.id] = {
@@ -332,48 +332,48 @@ async def handle_gift_message(message: types.Message):
 # ============================================
 @dp.callback_query_handler(lambda c: c.data.startswith("pay_"))
 async def callback_payment_method(callback: types.CallbackQuery):
-    """Payment method selection - با پشتیبانی از پیش‌پرداخت"""
+    """Select the payment method for purchases and reservations."""
     user = callback.from_user
 
     parts = callback.data.split("_")
-    method = parts[1]  # card یا usdt
+    method = parts[1]
     product = "_".join(parts[2:])  # normal, premium, gift_normal, reserve_normal, complete_normal, etc.
 
     # ─────────────────────────────────────────────────────────
-    # تشخیص نوع خرید
+
     # ─────────────────────────────────────────────────────────
     is_gift = product.startswith("gift_")
-    is_reserve = product.startswith("reserve_")  # ✅ جدید
-    is_complete = product.startswith("complete_")  # ✅ جدید
+    is_reserve = product.startswith("reserve_")
+    is_complete = product.startswith("complete_")
     
-    # استخراج محصول اصلی
+
     if is_gift:
         actual_product = product.replace("gift_", "")
         price_usd = NORMAL_PRICE if actual_product == "normal" else PREMIUM_PRICE
     elif is_reserve:
-        # ✅ پیش‌پرداخت - همیشه $2
+
         actual_product = product.replace("reserve_", "")
         price_usd = 2.0
     elif is_complete:
-        # ✅ تکمیل - محاسبه باقیمانده
+
         actual_product = product.replace("complete_", "")
         
-        # دریافت اطلاعات رزرو
+
         reserve = await get_user_reserve_status(user.id)
         
         if not reserve["has_reserve"]:
             await callback.answer("❌ رزرو یافت نشد!", show_alert=True)
             return
         
-        # محاسبه باقیمانده
+
         total_price = NORMAL_PRICE if actual_product == "normal" else PREMIUM_PRICE
         price_usd = total_price - reserve["amount_paid"]
     else:
-        # خرید معمولی
+
         actual_product = product
         price_usd = NORMAL_PRICE if product == "normal" else PREMIUM_PRICE
 
-    # چک کد تخفیف - فقط برای خرید عادی (نه هدیه، نه رزرو، نه تکمیل)
+
     discount_applied = 0
     if not is_gift and not is_reserve and not is_complete:
         if user.id in user_states and "discount_code" in user_states[user.id]:
@@ -387,7 +387,7 @@ async def callback_payment_method(callback: types.CallbackQuery):
                 logger.info(f"✅ Discount applied: {code} ({discount_percent}%)")
 
     # ─────────────────────────────────────────────────────────
-    # پرداخت کارت بانکی
+
     # ─────────────────────────────────────────────────────────
     if method == "card":
         usdt_rate = await get_usdt_price_irr()
@@ -396,7 +396,7 @@ async def callback_payment_method(callback: types.CallbackQuery):
         
         await append_row("Purchases", [
             purchase_id, str(user.id), user.username or "", 
-            product,  # ✅ محصول کامل: normal, gift_normal, reserve_normal, complete_normal
+            product,
             str(price_usd), str(price_irr), "card", "", "pending",
             now_iso(), "", "", ""
         ])
@@ -404,14 +404,14 @@ async def callback_payment_method(callback: types.CallbackQuery):
         user_states[user.id] = {
             "state": "awaiting_card_receipt",
             "purchase_id": purchase_id,
-            "product": product,  # ✅ محصول کامل
+            "product": product,
             "amount_usd": price_usd,
             "amount_irr": price_irr
         }
         
         support_username = os.getenv("SUPPORT_USERNAME", "@YourSupportAccount")
         
-        # ✅ متن پیام بسته به نوع
+
         if is_reserve:
             product_text = f"پیش‌پرداخت {'ویژه' if actual_product == 'premium' else 'معمولی'}"
         elif is_complete:
@@ -440,7 +440,7 @@ async def callback_payment_method(callback: types.CallbackQuery):
         record_screen(user.id, callback.message.message_id)
     
     # ─────────────────────────────────────────────────────────
-    # پرداخت تتر
+
     # ─────────────────────────────────────────────────────────
     elif method == "usdt":
         purchase_id = generate_purchase_id()
@@ -454,11 +454,11 @@ async def callback_payment_method(callback: types.CallbackQuery):
         user_states[user.id] = {
             "state": "awaiting_usdt_txid",
             "purchase_id": purchase_id,
-            "product": product,  # ✅ محصول کامل
+            "product": product,
             "amount_usd": price_usd
         }
         
-        # ✅ متن پیام
+
         if is_reserve:
             product_text = f"پیش‌پرداخت {'ویژه' if actual_product == 'premium' else 'معمولی'}"
         elif is_complete:
@@ -756,21 +756,21 @@ async def callback_admin_purchase(callback: types.CallbackQuery):
         user_result = await find_user(user_id)
         username = user_result[1][1] if user_result else ""
         
-        # ✅ چک نوع خرید
+
         is_reserve = product.startswith("reserve_")
         is_complete = product.startswith("complete_")
         is_gift = product.startswith("gift_")
         
         # ─────────────────────────────────────────────────────────
-        # حالت ۱: پیش‌پرداخت (رزرو)
+
         # ─────────────────────────────────────────────────────────
         if is_reserve:
             actual_product = product.replace("reserve_", "")
             
-            # ثبت رزرو
+
             await set_user_reserve(user_id, actual_product, 2.0)
             
-            # پیام به کاربر
+
             product_name = "ویژه" if actual_product == "premium" else "معمولی"
             total = PREMIUM_PRICE if actual_product == "premium" else NORMAL_PRICE
             remaining = total - 2.0
@@ -791,7 +791,7 @@ async def callback_admin_purchase(callback: types.CallbackQuery):
             except Exception as e:
                 logger.exception(f"Failed to send reserve confirmation: {e}")
             
-            # پیام ادمین
+
             try:
                 await callback.message.edit_caption(
                     caption=callback.message.caption + "\n\n✅ <b>رزرو ثبت شد</b>",
@@ -809,12 +809,12 @@ async def callback_admin_purchase(callback: types.CallbackQuery):
             await callback.answer("✅ رزرو ثبت شد")
         
         # ─────────────────────────────────────────────────────────
-        # حالت ۲: تکمیل پیش‌پرداخت
+
         # ─────────────────────────────────────────────────────────
         elif is_complete:
             actual_product = product.replace("complete_", "")
             
-            # دریافت اطلاعات رزرو
+
             reserve = await get_user_reserve_status(user_id)
             
             if not reserve["has_reserve"]:
@@ -822,17 +822,17 @@ async def callback_admin_purchase(callback: types.CallbackQuery):
                 await callback.answer("❌ رزرو یافت نشد!", show_alert=True)
                 return
             
-            # ✅ فعال‌سازی اشتراک
+
             await activate_subscription(user_id, username, actual_product, payment_method)
             
-            # ✅ محاسبه پورسانت با کل مبلغ (رزرو + تکمیل)
+
             total_paid = reserve["amount_paid"] + amount_usd
             await process_referral_commission(purchase_id, user_id, total_paid)
             
-            # ✅ پاک کردن رزرو
+
             await clear_user_reserve(user_id)
             
-            # ✅ ارسال لینک معرف و پیام تبریک
+
             try:
                 result = await find_user(user_id)
                 if result:
@@ -856,7 +856,7 @@ async def callback_admin_purchase(callback: types.CallbackQuery):
             except Exception as e:
                 logger.exception(f"Failed to send completion message: {e}")
             
-            # پیام ادمین
+
             try:
                 await callback.message.edit_caption(
                     caption=callback.message.caption + "\n\n✅ <b>تکمیل شد و فعال شد</b>",
@@ -874,17 +874,17 @@ async def callback_admin_purchase(callback: types.CallbackQuery):
             await callback.answer("✅ تکمیل و فعال شد")
         
         # ─────────────────────────────────────────────────────────
-        # حالت ۳: هدیه
+
         # ─────────────────────────────────────────────────────────
         elif is_gift:
             actual_product = product.replace("gift_", "")
             
-            # دریافت پیام هدیه
+
             gift_message = ""
             if user_id in user_states:
                 gift_message = user_states[user_id].get("gift_message", "")
             
-            # ساخت گیفت کارت
+
             gift_code = await create_gift_card(actual_product, user_id, username, gift_message)
             
             if gift_code:
@@ -905,10 +905,10 @@ async def callback_admin_purchase(callback: types.CallbackQuery):
                 except Exception as e:
                     logger.exception(f"Failed to send gift: {e}")
             
-            # حذف state
+
             user_states.pop(user_id, None)
             
-            # پیام ادمین
+
             try:
                 await callback.message.edit_caption(
                     caption=callback.message.caption + "\n\n✅ <b>هدیه ساخته شد</b>",
@@ -926,7 +926,7 @@ async def callback_admin_purchase(callback: types.CallbackQuery):
             await callback.answer("✅ هدیه ساخته شد")
         
         # ─────────────────────────────────────────────────────────
-        # حالت ۴: خرید عادی
+
         # ─────────────────────────────────────────────────────────
         else:
             try:

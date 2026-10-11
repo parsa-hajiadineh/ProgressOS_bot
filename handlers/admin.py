@@ -29,7 +29,7 @@ from main import (
 
 @dp.message_handler(lambda msg: msg.text == "🔐 پنل ادمین")
 async def handle_go_to_admin_panel(message: types.Message):
-    """رفتن به پنل ادمین از منوی عادی"""
+    """Open the admin panel."""
     if not is_admin(message.from_user.id):
         return
 
@@ -43,17 +43,17 @@ async def handle_go_to_admin_panel(message: types.Message):
 
 @dp.message_handler(lambda msg: msg.text == "📊 آمار سیستم")
 async def handle_admin_stats_menu(message: types.Message):
-    """نمایش آمار سیستم"""
+    """Display system statistics."""
     if not is_admin(message.from_user.id):
         return
 
-    # استفاده از دستور /dashboard موجود
+
     await cmd_admin_dashboard(message)
 
 
 @dp.message_handler(lambda msg: msg.text == "📢 ارسال پیام")
 async def handle_admin_message_menu(message: types.Message):
-    """منوی ارسال پیام"""
+    """Display messaging options."""
     if not is_admin(message.from_user.id):
         return
 
@@ -74,7 +74,7 @@ async def handle_admin_message_menu(message: types.Message):
 
 @dp.callback_query_handler(lambda c: c.data == "admin_msg_all")
 async def callback_admin_msg_all(callback: types.CallbackQuery):
-    """راهنمای broadcast"""
+    """Show broadcast instructions."""
     if not is_admin(callback.from_user.id):
         await callback.answer("⛔️", show_alert=True)
         return
@@ -90,12 +90,12 @@ async def callback_admin_msg_all(callback: types.CallbackQuery):
 
 @dp.callback_query_handler(lambda c: c.data == "admin_msg_group")
 async def callback_admin_msg_group(callback: types.CallbackQuery):
-    """راهنمای msklist"""
+    """Show filtered messaging instructions."""
     if not is_admin(callback.from_user.id):
         await callback.answer("⛔️", show_alert=True)
         return
 
-    # استفاده مستقیم از منوی msklist
+
     await callback.message.edit_text(
         "📋 <b>پیام به گروه</b>\n\n"
         "از دستور زیر استفاده کنید:\n\n"
@@ -104,7 +104,7 @@ async def callback_admin_msg_group(callback: types.CallbackQuery):
         parse_mode="HTML"
     )
 
-    # فراخوانی مستقیم منوی msklist
+
     kb = InlineKeyboardMarkup(row_width=1)
     kb.add(
         InlineKeyboardButton("✅ فعال", callback_data="msklist_active"),
@@ -121,7 +121,7 @@ async def callback_admin_msg_group(callback: types.CallbackQuery):
 
 @dp.callback_query_handler(lambda c: c.data == "admin_msg_single")
 async def callback_admin_msg_single(callback: types.CallbackQuery):
-    """راهنمای msg"""
+    """Show direct messaging instructions."""
     if not is_admin(callback.from_user.id):
         await callback.answer("⛔️", show_alert=True)
         return
@@ -139,7 +139,7 @@ async def callback_admin_msg_single(callback: types.CallbackQuery):
 
 @dp.message_handler(lambda msg: msg.text == "💳 تایید خریدها")
 async def handle_admin_purchases_menu(message: types.Message):
-    """لیست خریدهای در انتظار تایید"""
+    """List pending purchases."""
     if not is_admin(message.from_user.id):
         return
 
@@ -151,7 +151,7 @@ async def handle_admin_purchases_menu(message: types.Message):
         return
 
     text = "💳 <b>خریدهای در انتظار تایید:</b>\n\n"
-    for row in pending[:10]:  # فقط ۱۰ تا اول
+    for row in pending[:10]:
         purchase_id = row[0] if len(row) > 0 else ""
         user_id = row[1] if len(row) > 1 else ""
         product = row[3] if len(row) > 3 else ""
@@ -170,7 +170,7 @@ async def handle_admin_purchases_menu(message: types.Message):
 
 @dp.message_handler(lambda msg: msg.text == "💸 تایید برداشت‌ها")
 async def handle_admin_withdrawals_menu(message: types.Message):
-    """لیست برداشت‌های در انتظار"""
+    """List pending withdrawals."""
     if not is_admin(message.from_user.id):
         return
 
@@ -201,7 +201,7 @@ async def handle_admin_withdrawals_menu(message: types.Message):
 
 @dp.message_handler(lambda msg: msg.text == "🎟 کدهای تخفیف")
 async def handle_admin_discount_codes_menu(message: types.Message):
-    """راهنمای کدهای تخفیف"""
+    """Show discount code instructions."""
     if not is_admin(message.from_user.id):
         return
 
@@ -241,7 +241,7 @@ async def callback_list_discount(callback: types.CallbackQuery):
         await callback.answer("⛔️", show_alert=True)
         return
 
-    # استفاده از /listcodes موجود
+
     rows = await get_all_rows("DiscountCodes")
 
     if len(rows) <= 1:
@@ -251,7 +251,7 @@ async def callback_list_discount(callback: types.CallbackQuery):
 
     text = "📋 <b>کدهای تخفیف:</b>\n\n"
 
-    for row in rows[1:][:10]:  # ۱۰ تا اول
+    for row in rows[1:][:10]:
         if not row or len(row) < 8:
             continue
 
@@ -274,7 +274,7 @@ async def callback_list_discount(callback: types.CallbackQuery):
 
 @dp.message_handler(lambda msg: msg.text == "🌟 کدهای بوست")
 async def handle_admin_boost_codes_menu(message: types.Message):
-    """راهنمای کدهای بوست"""
+    """Show boost code instructions."""
     if not is_admin(message.from_user.id):
         return
 
@@ -348,7 +348,7 @@ async def callback_list_boost(callback: types.CallbackQuery):
 
 @dp.message_handler(lambda msg: msg.text == "👤 جستجوی کاربر")
 async def handle_admin_user_search_menu(message: types.Message):
-    """راهنمای جستجوی کاربر"""
+    """Prompt for a user search."""
     if not is_admin(message.from_user.id):
         return
 
@@ -363,7 +363,7 @@ async def handle_admin_user_search_menu(message: types.Message):
 
 @dp.message_handler(lambda msg: user_states.get(msg.from_user.id, {}).get("state") == "awaiting_user_search")
 async def handle_user_search_query(message: types.Message):
-    """پردازش جستجوی کاربر"""
+    """Process the user search query."""
     if not is_admin(message.from_user.id):
         return
 
@@ -390,7 +390,7 @@ async def handle_user_search_query(message: types.Message):
     balance = user_row[6] if len(user_row) > 6 else "0"
     status = user_row[7] if len(user_row) > 7 else ""
 
-    # چک اشتراک
+
     subscription = await get_active_subscription(search_id)
     sub_info = "❌ ندارد"
     if subscription:
@@ -415,7 +415,7 @@ async def handle_user_search_query(message: types.Message):
 
 @dp.message_handler(lambda msg: msg.text == "💱 قیمت تتر")
 async def handle_admin_usdt_price(message: types.Message):
-    """منوی مدیریت قیمت تتر"""
+    """Display USDT price management options."""
     if not is_admin(message.from_user.id):
         return
 
@@ -438,7 +438,7 @@ async def handle_admin_usdt_price(message: types.Message):
 
 @dp.callback_query_handler(lambda c: c.data == "admin_change_usdt")
 async def callback_admin_change_usdt(callback: types.CallbackQuery):
-    """درخواست تغییر قیمت"""
+    """Prompt for a new USDT price."""
     if not is_admin(callback.from_user.id):
         await callback.answer("⛔️", show_alert=True)
         return
@@ -459,7 +459,7 @@ async def callback_admin_change_usdt(callback: types.CallbackQuery):
 
 @dp.message_handler(lambda msg: user_states.get(msg.from_user.id, {}).get("state") == "awaiting_usdt_price")
 async def handle_usdt_price_input(message: types.Message):
-    """دریافت قیمت جدید تتر"""
+    """Process the new USDT price."""
     if not is_admin(message.from_user.id):
         return
 
@@ -472,7 +472,7 @@ async def handle_usdt_price_input(message: types.Message):
             await message.reply("❌ قیمت نامعتبر!")
             return
 
-        # ذخیره در Config
+
         success = await set_usdt_price_in_config(new_price)
 
         if success:
@@ -491,7 +491,7 @@ async def handle_usdt_price_input(message: types.Message):
 
 @dp.callback_query_handler(lambda c: c.data == "admin_fetch_usdt")
 async def callback_admin_fetch_usdt(callback: types.CallbackQuery):
-    """دریافت خودکار از Nobitex"""
+    """Fetch the USDT price from Nobitex."""
     if not is_admin(callback.from_user.id):
         await callback.answer("⛔️", show_alert=True)
         return
@@ -508,7 +508,7 @@ async def callback_admin_fetch_usdt(callback: types.CallbackQuery):
                         price_rial = float(asks[0][0])
                         price_toman = price_rial / 10
 
-                        # ذخیره
+
                         await set_usdt_price_in_config(price_toman)
 
                         await callback.message.edit_text(
@@ -530,7 +530,7 @@ async def callback_admin_fetch_usdt(callback: types.CallbackQuery):
 
 @dp.message_handler(lambda msg: msg.text == "💎 افیلیت‌ها")
 async def handle_admin_affiliates_menu(message: types.Message):
-    """منوی مدیریت افیلیت‌ها (مخفی)"""
+    """Display affiliate management options."""
     if not is_admin(message.from_user.id):
         return
 
@@ -562,7 +562,7 @@ async def handle_admin_affiliates_menu(message: types.Message):
 
 @dp.callback_query_handler(lambda c: c.data == "aff_create")
 async def callback_aff_create(callback: types.CallbackQuery):
-    """راهنمای ساخت افیلیت"""
+    """Show affiliate creation instructions."""
     if not is_admin(callback.from_user.id):
         await callback.answer("⛔️", show_alert=True)
         return
@@ -585,7 +585,7 @@ async def callback_aff_create(callback: types.CallbackQuery):
 
 @dp.callback_query_handler(lambda c: c.data == "aff_list")
 async def callback_aff_list(callback: types.CallbackQuery):
-    """لیست افیلیت‌ها"""
+    """List affiliates."""
     if not is_admin(callback.from_user.id):
         await callback.answer("⛔️", show_alert=True)
         return
@@ -624,7 +624,7 @@ async def callback_aff_list(callback: types.CallbackQuery):
 
 @dp.callback_query_handler(lambda c: c.data == "aff_edit")
 async def callback_aff_edit(callback: types.CallbackQuery):
-    """راهنمای ویرایش"""
+    """Show affiliate update instructions."""
     if not is_admin(callback.from_user.id):
         await callback.answer("⛔️", show_alert=True)
         return
@@ -646,7 +646,7 @@ async def callback_aff_edit(callback: types.CallbackQuery):
 
 @dp.callback_query_handler(lambda c: c.data == "aff_delete")
 async def callback_aff_delete(callback: types.CallbackQuery):
-    """راهنمای حذف"""
+    """Show affiliate removal instructions."""
     if not is_admin(callback.from_user.id):
         await callback.answer("⛔️", show_alert=True)
         return
@@ -728,15 +728,15 @@ async def cmd_admin_stats(message: types.Message):
     )
 
 # ============================================
-# ADMIN MESSAGING SYSTEM - نسخه نهایی
-# جای دادن: جایی که قبلاً /broadcast بود حذف کنید
-# و این کل بلوک رو بجاش بذارید
+
+
+
 # ============================================
 
-# ─── دستور /msg — پیام به یه نفر خاص ───
+
 @dp.message_handler(commands=["msg"])
 async def cmd_admin_msg(message: types.Message):
-    """Admin: پیام به یه کاربر خاص با ID"""
+    """Send a direct message to a Telegram user by ID."""
     if not is_admin(message.from_user.id):
         return
 
@@ -761,7 +761,7 @@ async def cmd_admin_msg(message: types.Message):
 
     text = parts[2]
 
-    # چک کاربر وجود داره یا نه
+
     target = await find_user(target_id)
     if not target:
         user_states[message.from_user.id] = {
@@ -791,10 +791,10 @@ async def cmd_admin_msg(message: types.Message):
         await message.reply(f"❌ خطا در ارسال: {e}")
 
 
-# ─── تایید پیام به کاربر ناشناس ───
+
 @dp.message_handler(lambda msg: user_states.get(msg.from_user.id, {}).get("state") == "confirm_msg_unknown_user")
 async def handle_confirm_msg_unknown(message: types.Message):
-    """تایید ارسال پیام به کاربر ناشناس"""
+    """Confirm messaging a user outside the database."""
     if not is_admin(message.from_user.id):
         return
 
@@ -812,10 +812,10 @@ async def handle_confirm_msg_unknown(message: types.Message):
         await message.reply("❌ لغو شد.")
 
 
-# ─── دستور /broadcast — پیام به کل کاربران (با تایید) ───
+
 @dp.message_handler(commands=["broadcast"])
 async def cmd_admin_broadcast(message: types.Message):
-    """Admin broadcast to all users - با مرحله تایید"""
+    """Preview a broadcast and request confirmation."""
     if not is_admin(message.from_user.id):
         return
 
@@ -857,7 +857,7 @@ async def cmd_admin_broadcast(message: types.Message):
 
 @dp.callback_query_handler(lambda c: c.data == "confirm_broadcast_yes")
 async def callback_confirm_broadcast(callback: types.CallbackQuery):
-    """تایید و ارسال broadcast"""
+    """Send the confirmed broadcast."""
     if not is_admin(callback.from_user.id):
         await callback.answer("⛔️ شما ادمین نیستید!", show_alert=True)
         return
@@ -901,16 +901,16 @@ async def callback_confirm_broadcast(callback: types.CallbackQuery):
 
 @dp.callback_query_handler(lambda c: c.data == "confirm_broadcast_no")
 async def callback_cancel_broadcast(callback: types.CallbackQuery):
-    """لغو broadcast"""
+    """Cancel the broadcast."""
     user_states.pop(callback.from_user.id, None)
     await callback.message.edit_text("❌ <b>لغو شد.</b>", parse_mode="HTML")
     await callback.answer()
 
 
-# ─── دستور /msklist — پیام به گروه فیلتر شده ───
+
 @dp.message_handler(commands=["msklist"])
 async def cmd_admin_msklist(message: types.Message):
-    """Admin: منوی پیام به گروه فیلتر شده"""
+    """Display filtered messaging options."""
     if not is_admin(message.from_user.id):
         return
 
@@ -932,12 +932,9 @@ async def cmd_admin_msklist(message: types.Message):
     )
 
 
-# ─── تابع فیلتر کاربران ───
+
 async def get_filtered_users(filter_type: str) -> list:
-    """
-    فیلتر کاربران بر اساس نوع انتخاب شده
-    Returns: لیست telegram_id های فیلتر شده
-    """
+    """Return Telegram user IDs matching the selected filter."""
     users_rows = await get_all_rows("Users")
     subs_rows = await get_all_rows("Subscriptions")
     referrals_rows = await get_all_rows("Referrals")
@@ -947,7 +944,7 @@ async def get_filtered_users(filter_type: str) -> list:
     filtered = []
 
     if filter_type == "active":
-        # اشتراک فعال و غیر منقضی
+
         for row in subs_rows[1:]:
             if not row or len(row) < 6:
                 continue
@@ -957,7 +954,7 @@ async def get_filtered_users(filter_type: str) -> list:
                     filtered.append(row[0])
 
     elif filter_type == "expired":
-        # قبلا sub داشتن ولی الان فعال نیستن
+
         active_ids = set()
         for row in subs_rows[1:]:
             if not row or len(row) < 6:
@@ -977,7 +974,7 @@ async def get_filtered_users(filter_type: str) -> list:
                 filtered.append(tid)
 
     elif filter_type == "referrers":
-        # حداقل یه بار پورسانت گرفتن
+
         seen = set()
         for row in referrals_rows[1:]:
             if row and len(row) > 0 and row[0] and row[0] not in seen:
@@ -985,7 +982,7 @@ async def get_filtered_users(filter_type: str) -> list:
                 filtered.append(row[0])
 
     elif filter_type == "gift_buyers":
-        # هدیه خریده و تایید شده
+
         seen = set()
         for row in purchases_rows[1:]:
             if not row or len(row) < 10:
@@ -995,7 +992,7 @@ async def get_filtered_users(filter_type: str) -> list:
                 filtered.append(row[1])
 
     elif filter_type == "boosted":
-        # بوست فعال (فیلد 10)
+
         for row in users_rows[1:]:
             if not row or len(row) < 11:
                 continue
@@ -1005,18 +1002,18 @@ async def get_filtered_users(filter_type: str) -> list:
     return filtered
 
 
-# ─── Callback های فیلتر msklist ───
-# نکته: lambda فیلتر میکنه confirm رو جدا نگیره
+
+
 @dp.callback_query_handler(lambda c: c.data.startswith("msklist_") and c.data not in ("msklist_confirm_yes", "msklist_confirm_no"))
 async def callback_msklist_filter(callback: types.CallbackQuery):
-    """فیلتر انتخاب شده رو پردازش کن"""
+    """Process the selected messaging filter."""
     if not is_admin(callback.from_user.id):
         await callback.answer("⛔️ شما ادمین نیستید!", show_alert=True)
         return
 
     filter_type = callback.data.replace("msklist_", "")
 
-    # لیست دستی - state جدا
+
     if filter_type == "manual":
         user_states[callback.from_user.id] = {
             "state": "awaiting_manual_id_list"
@@ -1032,7 +1029,7 @@ async def callback_msklist_filter(callback: types.CallbackQuery):
         await callback.answer()
         return
 
-    # فیلتر خودکار
+
     filtered_ids = await get_filtered_users(filter_type)
 
     filter_names = {
@@ -1051,7 +1048,7 @@ async def callback_msklist_filter(callback: types.CallbackQuery):
         await callback.answer()
         return
 
-    # state ذخیره
+
     user_states[callback.from_user.id] = {
         "state": "awaiting_msklist_text",
         "filter_type": filter_type,
@@ -1067,10 +1064,10 @@ async def callback_msklist_filter(callback: types.CallbackQuery):
     await callback.answer()
 
 
-# ─── دریافت لیست دستی ID ها ───
+
 @dp.message_handler(lambda msg: user_states.get(msg.from_user.id, {}).get("state") == "awaiting_manual_id_list")
 async def handle_manual_id_list(message: types.Message):
-    """پارس لیست دستی ID ها"""
+    """Parse a manually entered list of Telegram user IDs."""
     if not is_admin(message.from_user.id):
         return
 
@@ -1079,7 +1076,7 @@ async def handle_manual_id_list(message: types.Message):
     invalid = []
 
     for line in lines:
-        # فقط عدد خالص رو بگیر
+
         cleaned = line.split()[0] if line.split() else ""
         try:
             tid = int(cleaned)
@@ -1106,10 +1103,10 @@ async def handle_manual_id_list(message: types.Message):
     )
 
 
-# ─── دریافت پیام و نشون دادن preview ───
+
 @dp.message_handler(lambda msg: user_states.get(msg.from_user.id, {}).get("state") == "awaiting_msklist_text")
 async def handle_msklist_text(message: types.Message):
-    """دریافت پیام و نشون دادن preview با تایید"""
+    """Preview the message for confirmation."""
     if not is_admin(message.from_user.id):
         return
 
@@ -1122,7 +1119,7 @@ async def handle_msklist_text(message: types.Message):
         await message.reply("❌ پیام خالیه! دوباره بنویسید.")
         return
 
-    # state رو به مرحله تایید بذاریم
+
     user_states[message.from_user.id] = {
         "state": "confirm_msklist",
         "filtered_ids": filtered_ids,
@@ -1156,10 +1153,10 @@ async def handle_msklist_text(message: types.Message):
     )
 
 
-# ─── تایید و ارسال به گروه فیلتر شده ───
+
 @dp.callback_query_handler(lambda c: c.data == "msklist_confirm_yes")
 async def callback_msklist_send(callback: types.CallbackQuery):
-    """ارسال پیام به گروه فیلتر شده"""
+    """Send the message to the selected users."""
     if not is_admin(callback.from_user.id):
         await callback.answer("⛔️ شما ادمین نیستید!", show_alert=True)
         return
@@ -1202,7 +1199,7 @@ async def callback_msklist_send(callback: types.CallbackQuery):
 
 @dp.callback_query_handler(lambda c: c.data == "msklist_confirm_no")
 async def callback_msklist_cancel(callback: types.CallbackQuery):
-    """لغو ارسال گروه"""
+    """Cancel filtered messaging."""
     user_states.pop(callback.from_user.id, None)
     await callback.message.edit_text("❌ <b>لغو شد.</b>", parse_mode="HTML")
     await callback.answer()
@@ -1318,7 +1315,7 @@ async def cmd_admin_dashboard(message: types.Message):
         await message.reply("❌ خطا در محاسبه آمار.")
         return
 
-    # ساخت پیام
+
     dashboard_text = (
         "📊 <b>داشبورد مدیریت</b>\n\n"
 
@@ -1467,7 +1464,7 @@ async def cmd_list_boosts(message: types.Message):
 
 @dp.message_handler(commands=["makeaffiliate"])
 async def cmd_make_affiliate(message: types.Message):
-    """ساخت افیلیت جدید"""
+    """Create an affiliate."""
     if not is_admin(message.from_user.id):
         return
 
@@ -1499,11 +1496,11 @@ async def cmd_make_affiliate(message: types.Message):
             await message.reply("❌ نرخ باید بین ۰ تا ۵۰ درصد باشد!")
             return
 
-        # ساخت
+
         success = await create_affiliate(user_id, max_depth, rate_percent, message.from_user.id, notes)
 
         if success:
-            # دریافت اطلاعات کاربر
+
             user_result = await find_user(user_id)
             username = ""
             full_name = ""
@@ -1523,7 +1520,7 @@ async def cmd_make_affiliate(message: types.Message):
                 parse_mode="HTML"
             )
 
-            # نوتیف به افیلیت (مخفی)
+
             try:
                 await bot.send_message(
                     user_id,
@@ -1543,7 +1540,7 @@ async def cmd_make_affiliate(message: types.Message):
 
 @dp.message_handler(commands=["updateaffiliate"])
 async def cmd_update_affiliate(message: types.Message):
-    """آپدیت افیلیت"""
+    """Update an affiliate."""
     if not is_admin(message.from_user.id):
         return
 
@@ -1576,7 +1573,7 @@ async def cmd_update_affiliate(message: types.Message):
                 parse_mode="HTML"
             )
 
-            # نوتیف
+
             try:
                 await bot.send_message(
                     user_id,
@@ -1596,7 +1593,7 @@ async def cmd_update_affiliate(message: types.Message):
 
 @dp.message_handler(commands=["removeaffiliate"])
 async def cmd_remove_affiliate(message: types.Message):
-    """حذف/غیرفعال کردن افیلیت"""
+    """Deactivate an affiliate."""
     if not is_admin(message.from_user.id):
         return
 
@@ -1626,7 +1623,7 @@ async def cmd_remove_affiliate(message: types.Message):
                 parse_mode="HTML"
             )
 
-            # نوتیف
+
             try:
                 await bot.send_message(
                     user_id,
@@ -1645,7 +1642,7 @@ async def cmd_remove_affiliate(message: types.Message):
 
 @dp.message_handler(commands=["listaffiliates"])
 async def cmd_list_affiliates(message: types.Message):
-    """لیست تمام افیلیت‌ها"""
+    """List all affiliates."""
     if not is_admin(message.from_user.id):
         return
 
@@ -1690,7 +1687,7 @@ async def cmd_list_affiliates(message: types.Message):
 
 @dp.message_handler(lambda msg: msg.text == "🔙 منوی عادی")
 async def handle_back_to_user_menu(message: types.Message):
-    """برگشت از منوی ادمین به منوی کاربر عادی"""
+    """Return to the user menu."""
     if not is_admin(message.from_user.id):
         return
 
@@ -1703,6 +1700,6 @@ async def handle_back_to_user_menu(message: types.Message):
 
 @dp.message_handler(commands=["reset"])
 async def cmd_reset(message: types.Message):
-    """پاک کردن state"""
+    """Clear the current user flow state."""
     user_states.pop(message.from_user.id, None)
     await message.reply("✅ State پاک شد. الان /start بزن")

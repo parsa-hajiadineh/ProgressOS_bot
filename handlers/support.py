@@ -28,15 +28,15 @@ async def handle_referral(message: types.Message):
     """Referral handler"""
     user = message.from_user
     
-    # چک عضویت
+
     if not await check_membership_for_all_messages(message):
         return
         
-    # ✅ چک رزرو
+
     if not await check_reserve_block(message):
         return
     
-    # ✅ چک خرید تایید شده
+
     purchases_rows = await get_all_rows("Purchases")
     has_purchase = False
     
@@ -80,13 +80,13 @@ async def handle_referral(message: types.Message):
     bot_username = (await bot.get_me()).username
     referral_link = f"https://t.me/{bot_username}?start={referral_code}"
 
-    # ✅ نرخ پورسانت دینامیک - اگه بوست داشته باشه از اون نرخ نشون بده
+
     user_boost = await get_user_boost(user.id)
     l1_rate = user_boost["level1"] if user_boost else 8
     l2_rate = user_boost["level2"] if user_boost else 12
     boost_badge = "🌟 " if user_boost else ""
     
-    # ✅ آپدیت #19: اضافه دکمه اشتراک‌گذاری لینک معرف
+
     share_text = f"🎁 از این لینک عضو شو و من هم پورسانت میگیرم!"
     encoded_text = urllib.parse.quote(share_text)
     encoded_link = urllib.parse.quote(referral_link)
@@ -139,11 +139,11 @@ async def handle_referral(message: types.Message):
 async def handle_support(message: types.Message):
     """Support handler"""
     
-    # ✅ چک عضویت
+
     if not await check_membership_for_all_messages(message):
         return
     
-    # ✅ چک رزرو
+
     if not await check_reserve_block(message):
         return
     
@@ -198,11 +198,11 @@ async def handle_support_message(message: types.Message):
 async def handle_help(message: types.Message):
     """Help handler"""
     
-    # ✅ چک عضویت
+
     if not await check_membership_for_all_messages(message):
         return
   
-    # ✅ چک رزرو
+
     if not await check_reserve_block(message):
         return
     
@@ -241,11 +241,11 @@ async def cmd_report(message: types.Message):
     """Show monthly report"""
     user = message.from_user
     
-    # چک عضویت
+
     if not await check_membership_for_all_messages(message):
         return
 
-    # ✅ چک رزرو
+
     if not await check_reserve_block(message):
         return
     
@@ -262,12 +262,12 @@ async def cmd_report(message: types.Message):
 
 @dp.message_handler(commands=["redeem"])
 async def cmd_redeem_secret(message: types.Message):
-    """Secret command: redeem boost code - نه توی راهنما، نه توی منو"""
+    """Redeem a boost code through the command hidden from menus."""
     user = message.from_user
     args = message.get_args()
     
     if not args:
-        # اگه بدون آرگیمنت بزنه، هیچ پاسخی نده تا مخفی بمونه
+
         return
     
     code = args.strip().upper()
@@ -275,7 +275,7 @@ async def cmd_redeem_secret(message: types.Message):
     result = await validate_and_apply_boost(code, user.id)
     
     if result is None:
-        # کد نامعتبر - هیچ پاسخی نده تا مخفی بمونه
+
         return
     
     if result.get("error") == "already_boosted":
@@ -285,7 +285,7 @@ async def cmd_redeem_secret(message: types.Message):
         )
         return
     
-    # موفق شد
+
     await reply_and_record(message,
         f"🌟 <b>آفر ویژه فعال شد!</b>\n\n"
         f"💎 سطح 1: <b>{result['level1_percent']}%</b>\n"
@@ -294,7 +294,7 @@ async def cmd_redeem_secret(message: types.Message):
         parse_mode="HTML"
     )
     
-    # نوتیفیکیشن به ادمین
+
     if ADMIN_TELEGRAM_ID:
         try:
             await bot.send_message(

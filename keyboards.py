@@ -32,7 +32,7 @@ def main_menu_keyboard(show_admin_btn: bool = False):
     return kb
 
 def admin_menu_keyboard():
-    """منوی اختصاصی ادمین"""
+    """Build the admin menu."""
     kb = ReplyKeyboardMarkup(resize_keyboard=True)
     kb.row(
         KeyboardButton("📊 آمار سیستم"),
@@ -51,7 +51,7 @@ def admin_menu_keyboard():
         KeyboardButton("💱 قیمت تتر")
     )
     kb.row(
-        KeyboardButton("💎 افیلیت‌ها"),  # ← دکمه جدید (مخفی)
+        KeyboardButton("💎 افیلیت‌ها"),
         KeyboardButton("🔙 منوی عادی")
     )
     return kb
@@ -72,7 +72,7 @@ def subscription_keyboard():
             callback_data="buy_premium"
         ),
         InlineKeyboardButton(
-            "💵 پیش‌پرداخت $2 (رزرو)",  # ← دکمه جدید
+            "💵 پیش‌پرداخت $2 (رزرو)",
             callback_data="buy_reserve"
         ),
         InlineKeyboardButton("🎁 خرید هدیه", callback_data="buy_gift"),
@@ -99,7 +99,7 @@ def wallet_keyboard(balance: float, has_reserve: bool = False):
     """Wallet keyboard"""
     kb = InlineKeyboardMarkup(row_width=1)
     
-    # ✅ اگه رزرو داره، دکمه تکمیل
+
     if has_reserve:
         kb.add(InlineKeyboardButton("💵 تکمیل پیش‌پرداخت", callback_data="complete_reserve"))
     
@@ -128,7 +128,7 @@ def channel_membership_keyboard(missing_channels: List[str]):
     kb = InlineKeyboardMarkup(row_width=1)
     
     for channel in missing_channels:
-        # حذف @ اگه وجود داره
+
         channel_clean = channel.lstrip("@")
         
         kb.add(InlineKeyboardButton(
@@ -161,7 +161,7 @@ def social_share_keyboard(product: str = "subscription") -> InlineKeyboardMarkup
     """Social media share buttons"""
     kb = InlineKeyboardMarkup(row_width=2)
     
-    bot_username = os.getenv("BOT_USERNAME", "YourBot")  # اضافه کن به ENV
+    bot_username = os.getenv("BOT_USERNAME", "YourBot")
     share_text = f"🎉 من اشتراک {product} گرفتم! شما هم امتحان کنید:"
     share_url = f"https://t.me/{bot_username}"
     

@@ -56,12 +56,12 @@ async def schedule_expiry_reminders(telegram_id: int, expires: datetime):
     try:
         now = datetime.utcnow()
 
-        # محاسبه زمان‌های یادآوری
+
         seven_days_before = (expires - timedelta(days=7) - now).total_seconds()
         three_days_before = (expires - timedelta(days=3) - now).total_seconds()
         one_day_before = (expires - timedelta(days=1) - now).total_seconds()
 
-        # یادآوری ۷ روز مانده
+
         if seven_days_before > 0:
             await asyncio.sleep(seven_days_before)
             try:
@@ -76,7 +76,7 @@ async def schedule_expiry_reminders(telegram_id: int, expires: datetime):
             except:
                 pass
 
-        # یادآوری ۳ روز مانده
+
         if three_days_before > 0:
             await asyncio.sleep(max(0, three_days_before - seven_days_before))
             try:
@@ -90,7 +90,7 @@ async def schedule_expiry_reminders(telegram_id: int, expires: datetime):
             except:
                 pass
 
-        # یادآوری ۱ روز مانده
+
         if one_day_before > 0:
             await asyncio.sleep(max(0, one_day_before - three_days_before))
             try:
@@ -116,7 +116,7 @@ async def generate_monthly_report(telegram_id: int) -> str:
     """Generate monthly activity report for user"""
     from main import parse_iso
     try:
-        # دریافت اطلاعات کاربر
+
         user_result = await find_user(telegram_id)
         if not user_result:
             return None
@@ -124,7 +124,7 @@ async def generate_monthly_report(telegram_id: int) -> str:
         _, user_row = user_result
         username = user_row[1] if len(user_row) > 1 else "کاربر"
 
-        # محاسبه تعداد معرفی‌های ماه جاری
+
         referrals_rows = await get_all_rows("Referrals")
         now = datetime.utcnow()
         month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -147,7 +147,7 @@ async def generate_monthly_report(telegram_id: int) -> str:
                 except:
                     pass
 
-        # محاسبه کل معرفی‌ها و درآمد
+
         total_referrals = sum(1 for row in referrals_rows[1:] if row and str(row[0]) == str(telegram_id))
         total_earnings = 0.0
         for row in referrals_rows[1:]:
@@ -157,7 +157,7 @@ async def generate_monthly_report(telegram_id: int) -> str:
                 except:
                     pass
 
-        # ساخت پیام
+
         month_name = now.strftime("%B %Y")
 
         report = (
@@ -173,7 +173,7 @@ async def generate_monthly_report(telegram_id: int) -> str:
             f"━━━━━━━━━━━━━━━━━━━━\n\n"
         )
 
-        # پیام انگیزشی بر اساس عملکرد
+
         if monthly_referrals == 0:
             report += "💡 این ماه هیچ معرفی نداشتید!\n🎯 با دعوت دوستان درآمد کسب کنید."
         elif monthly_referrals < 3:
@@ -193,7 +193,7 @@ async def send_monthly_reports():
     from bot_instance import bot
     while True:
         try:
-            # محاسبه زمان تا اول ماه آینده
+
             now = datetime.utcnow()
             next_month = (now.replace(day=1) + timedelta(days=32)).replace(day=1, hour=10, minute=0, second=0, microsecond=0)
             delay = (next_month - now).total_seconds()
@@ -201,7 +201,7 @@ async def send_monthly_reports():
             logger.info(f"📅 Next monthly report in {delay/3600/24:.1f} days")
             await asyncio.sleep(delay)
 
-            # ارسال گزارش به همه کاربران فعال
+
             users_rows = await get_all_rows("Users")
             sent = 0
             failed = 0
@@ -213,7 +213,7 @@ async def send_monthly_reports():
                 telegram_id = int(row[0])
                 status = row[7] if len(row) > 7 else ""
 
-                # فقط برای کاربران فعال
+
                 if status != "active":
                     continue
 
@@ -227,7 +227,7 @@ async def send_monthly_reports():
                             reply_markup=main_menu_keyboard()
                         )
                         sent += 1
-                        await asyncio.sleep(0.1)  # جلوگیری از spam
+                        await asyncio.sleep(0.1)
                 except Exception as e:
                     logger.error(f"Failed to send report to {telegram_id}: {e}")
                     failed += 1
@@ -327,21 +327,21 @@ async def poll_sheets_auto_process():
                     if admin_action == "approve":
                         logger.info(f"✅ Auto-approving {purchase_id} for user {telegram_id}")
 
-                        # ✅ چک نوع خرید
+
                         is_reserve = product.startswith("reserve_")
                         is_complete = product.startswith("complete_")
                         is_gift = product.startswith("gift_")
 
                         # ─────────────────────────────────────────────────────────
-                        # حالت ۱: پیش‌پرداخت (رزرو)
+
                         # ─────────────────────────────────────────────────────────
                         if is_reserve:
                             actual_product = product.replace("reserve_", "")
 
-                            # ثبت رزرو
+
                             await set_user_reserve(telegram_id, actual_product, 2.0)
 
-                            # پیام به کاربر
+
                             product_name = "ویژه" if actual_product == "premium" else "معمولی"
                             total = PREMIUM_PRICE if actual_product == "premium" else NORMAL_PRICE
                             remaining = total - 2.0
@@ -364,31 +364,31 @@ async def poll_sheets_auto_process():
                                 logger.exception(f"Failed to send reserve: {e}")
 
                         # ─────────────────────────────────────────────────────────
-                        # حالت ۲: تکمیل پیش‌پرداخت
+
                         # ─────────────────────────────────────────────────────────
                         elif is_complete:
                             actual_product = product.replace("complete_", "")
 
-                            # دریافت رزرو
+
                             reserve = await get_user_reserve_status(telegram_id)
 
                             if not reserve["has_reserve"]:
                                 logger.error(f"Complete but no reserve for {telegram_id}")
                             else:
-                                # فعال‌سازی
+
                                 try:
                                     await activate_subscription(telegram_id, username, actual_product, payment_method)
 
-                                    # محاسبه پورسانت با کل مبلغ
+
                                     total_paid = reserve["amount_paid"] + amount_usd
                                     await process_referral_commission(purchase_id, telegram_id, total_paid)
 
-                                    # پاک رزرو
+
                                     await clear_user_reserve(telegram_id)
                                 except Exception as e:
                                     logger.exception(f"Failed to activate completion: {e}")
 
-                                # پیام
+
                                 try:
                                     result = await find_user(telegram_id)
                                     if result:
@@ -413,17 +413,17 @@ async def poll_sheets_auto_process():
                                     logger.exception(f"Failed to send completion: {e}")
 
                         # ─────────────────────────────────────────────────────────
-                        # حالت ۳: هدیه
+
                         # ─────────────────────────────────────────────────────────
                         elif is_gift:
                             actual_product = product.replace("gift_", "")
 
-                            # دریافت پیام هدیه
+
                             gift_message = ""
                             if telegram_id in user_states:
                                 gift_message = user_states[telegram_id].get("gift_message", "")
 
-                            # ساخت گیفت
+
                             gift_code = await create_gift_card(actual_product, telegram_id, username, gift_message)
 
                             if gift_code:
@@ -443,11 +443,11 @@ async def poll_sheets_auto_process():
                                 except:
                                     pass
 
-                            # حذف state
+
                             user_states.pop(telegram_id, None)
 
                         # ─────────────────────────────────────────────────────────
-                        # حالت ۴: خرید عادی
+
                         # ─────────────────────────────────────────────────────────
                         else:
                             try:

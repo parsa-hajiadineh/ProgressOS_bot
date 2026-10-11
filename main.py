@@ -63,7 +63,7 @@ async def check_membership_for_all_messages(message: types.Message):
     """Check if user is still member of required channels"""
     user = message.from_user
     
-    # فقط برای پیام‌های متنی که دستور /start نیستن
+
     if not message.text or message.text.startswith("/start"):
         return True
     
@@ -122,7 +122,7 @@ def is_valid_email(email: str) -> bool:
     return bool(re.match(pattern, email))
 
 def is_admin(user_id: int) -> bool:
-    """Check if user is admin (اصلی یا دوم)"""
+    """Check whether the user is either configured administrator."""
     try:
         if str(user_id) == str(ADMIN_TELEGRAM_ID):
             return True
@@ -136,12 +136,9 @@ def is_admin(user_id: int) -> bool:
 # NOBITEX API FOR IRR PRICE
 # ============================================
 async def get_usdt_price_irr() -> float:
-    """
-    Get USDT price in IRR
-    اول از Config sheet میخونه، اگه نبود fallback به Nobitex API
-    """
+    """Read the configured USDT price, falling back to Nobitex and then 160,000 Toman."""
     try:
-        # ✅ اول از Google Sheet بخون
+
         config_rows = await get_all_rows("Config")
         
         for row in config_rows[1:]:
@@ -159,7 +156,7 @@ async def get_usdt_price_irr() -> float:
                 except:
                     pass
         
-        # اگه توی Config نبود، سعی کن از Nobitex بگیر
+
         logger.info("💱 قیمت USDT در Config نبود، Nobitex...")
         
         async with ClientSession() as session:
@@ -175,7 +172,7 @@ async def get_usdt_price_irr() -> float:
     except Exception as e:
         logger.exception(f"Nobitex/Config error: {e}")
     
-    # Fallback نهایی
+
     logger.warning("⚠️ Using fallback USDT price: 160,000 تومان")
     return 160000.0
 
@@ -183,7 +180,7 @@ async def get_usdt_price_irr() -> float:
 # 
 
 async def get_usdt_price_from_config() -> float:
-    """دریافت قیمت USDT از Config"""
+    """Read the USDT price from the Config table."""
     try:
         config_rows = await get_all_rows("Config")
         
@@ -194,23 +191,23 @@ async def get_usdt_price_from_config() -> float:
             if row[0].strip() == "usdt_price_irr":
                 return float(row[1].strip())
         
-        return 160000.0  # پیش‌فرض
+        return 160000.0
     except:
         return 160000.0
 
 
 async def set_usdt_price_in_config(new_price: float) -> bool:
-    """تنظیم قیمت USDT در Config"""
+    """Set the USDT price in the Config table."""
     try:
         config_rows = await get_all_rows("Config")
         
-        # پیدا کردن ردیف موجود
+
         for idx, row in enumerate(config_rows[1:], start=2):
             if not row or len(row) < 1:
                 continue
             
             if row[0].strip() == "usdt_price_irr":
-                # آپدیت
+
                 row[1] = str(new_price)
                 if len(row) < 3:
                     row.append("قیمت تتر به تومان (دستی)")
@@ -218,7 +215,7 @@ async def set_usdt_price_in_config(new_price: float) -> bool:
                 logger.info(f"✅ USDT price updated to {new_price:,.0f}")
                 return True
         
-        # اگه نبود، اضافه کن
+
         await append_row("Config", [
             "usdt_price_irr",
             str(new_price),
@@ -434,10 +431,7 @@ async def get_active_subscription(telegram_id: int) -> Optional[List[str]]:
     return None
 
 async def get_user_reserve_status(telegram_id: int) -> dict:
-    """
-    چک وضعیت رزرو کاربر
-    Returns: {"has_reserve": bool, "product": str, "amount_paid": float}
-    """
+    """Return the user reservation status, product, and amount paid."""
     try:
         result = await find_user(telegram_id)
         if not result:
@@ -459,7 +453,7 @@ async def get_user_reserve_status(telegram_id: int) -> dict:
 
 
 async def set_user_reserve(telegram_id: int, product: str, amount_paid: float) -> bool:
-    """ثبت رزرو برای کاربر"""
+    """Store a user reservation."""
     try:
         result = await find_user(telegram_id)
         if not result:
@@ -467,7 +461,7 @@ async def set_user_reserve(telegram_id: int, product: str, amount_paid: float) -
         
         row_idx, row = result
         
-        # اطمینان از وجود فیلدها
+
         while len(row) < 13:
             row.append("")
         
@@ -484,7 +478,7 @@ async def set_user_reserve(telegram_id: int, product: str, amount_paid: float) -
 
 
 async def clear_user_reserve(telegram_id: int) -> bool:
-    """پاک کردن رزرو (بعد از تکمیل)"""
+    """Clear a completed reservation."""
     try:
         result = await find_user(telegram_id)
         if not result:
@@ -507,7 +501,7 @@ async def clear_user_reserve(telegram_id: int) -> bool:
         return False
 
 async def is_affiliate(telegram_id: int) -> bool:
-    """چک اگه این کاربر افیلیت هست"""
+    """Check whether the user is an active affiliate."""
     try:
         rows = await get_all_rows("Affiliates")
         
@@ -524,10 +518,7 @@ async def is_affiliate(telegram_id: int) -> bool:
 
 
 async def get_affiliate_config(telegram_id: int) -> dict:
-    """
-    دریافت تنظیمات افیلیت
-    Returns: {"is_affiliate": bool, "max_depth": int, "rate": float}
-    """
+    """Return affiliate status, maximum depth, and commission rate."""
     try:
         rows = await get_all_rows("Affiliates")
         
@@ -550,15 +541,15 @@ async def get_affiliate_config(telegram_id: int) -> dict:
 
 
 async def create_affiliate(telegram_id: int, max_depth: int, rate_percent: float, created_by: int, notes: str = "") -> bool:
-    """ساخت افیلیت جدید"""
+    """Create an affiliate record."""
     try:
-        # چک تکراری
+
         rows = await get_all_rows("Affiliates")
         for row in rows[1:]:
             if row and str(row[0]) == str(telegram_id):
-                return False  # قبلاً وجود داره
+                return False
         
-        # دریافت اطلاعات کاربر
+
         user_result = await find_user(telegram_id)
         username = ""
         full_name = ""
@@ -568,7 +559,7 @@ async def create_affiliate(telegram_id: int, max_depth: int, rate_percent: float
             username = user_row[1] if len(user_row) > 1 else ""
             full_name = user_row[2] if len(user_row) > 2 else ""
         
-        # ساخت افیلیت
+
         await append_row("Affiliates", [
             str(telegram_id),
             username,
@@ -590,7 +581,7 @@ async def create_affiliate(telegram_id: int, max_depth: int, rate_percent: float
 
 
 async def update_affiliate(telegram_id: int, max_depth: int = None, rate_percent: float = None) -> bool:
-    """آپدیت تنظیمات افیلیت"""
+    """Update affiliate settings."""
     try:
         rows = await get_all_rows("Affiliates")
         
@@ -598,7 +589,7 @@ async def update_affiliate(telegram_id: int, max_depth: int = None, rate_percent
             if not row or str(row[0]) != str(telegram_id):
                 continue
             
-            # آپدیت فیلدها
+
             if max_depth is not None:
                 row[3] = str(max_depth)
             
@@ -609,7 +600,7 @@ async def update_affiliate(telegram_id: int, max_depth: int = None, rate_percent
             logger.info(f"✅ Affiliate updated: {telegram_id} | depth={max_depth} | rate={rate_percent}%")
             return True
         
-        return False  # پیدا نشد
+        return False
         
     except Exception as e:
         logger.exception(f"Error updating affiliate: {e}")
@@ -617,7 +608,7 @@ async def update_affiliate(telegram_id: int, max_depth: int = None, rate_percent
 
 
 async def deactivate_affiliate(telegram_id: int) -> bool:
-    """غیرفعال کردن افیلیت"""
+    """Deactivate an affiliate."""
     try:
         rows = await get_all_rows("Affiliates")
         
@@ -673,10 +664,7 @@ from jobs import (
 
 
 async def get_user_max_purchase(telegram_id: int) -> float:
-    """
-    دریافت بالاترین مبلغ خرید تایید شده کاربر
-    Returns: مبلغ به دلار (float)
-    """
+    """Return the highest approved purchase amount in USD."""
     try:
         purchases_rows = await get_all_rows("Purchases")
         max_purchase = 0.0
@@ -685,7 +673,7 @@ async def get_user_max_purchase(telegram_id: int) -> float:
             if not row or len(row) < 9:
                 continue
             
-            # چک اگه این خرید برای این کاربر و تایید شده
+
             if str(row[1]) == str(telegram_id) and row[9] == "approved":
                 try:
                     amount = float(row[4]) if len(row) > 4 and row[4] else 0.0
@@ -703,14 +691,10 @@ async def get_user_max_purchase(telegram_id: int) -> float:
 
 # 
 async def check_reserve_block(message: types.Message) -> bool:
-    """
-    چک اگه کاربر رزرو داره، دکمه‌ها غیرفعال
-    Returns: True اگه بلاک نشد (ادامه بده)
-             False اگه بلاک شد (متوقف کن)
-    """
+    """Return False when an active reservation blocks the selected action."""
     user = message.from_user
     
-    # دکمه‌هایی که باید بلاک بشن
+
     blocked_buttons = [
         "🆓 تست کانال",
         "💎 خرید اشتراک",
@@ -719,14 +703,14 @@ async def check_reserve_block(message: types.Message) -> bool:
     ]
     
     if message.text not in blocked_buttons:
-        return True  # این دکمه بلاک نمیشه
+        return True
     
     reserve = await get_user_reserve_status(user.id)
     
     if not reserve["has_reserve"]:
-        return True  # رزرو نداره، ادامه بده
+        return True
     
-    # ✅ رزرو داره! بلاک کن
+
     product_name = "ویژه" if reserve["product"] == "premium" else "معمولی"
     paid = reserve["amount_paid"]
        
@@ -747,15 +731,12 @@ async def check_reserve_block(message: types.Message) -> bool:
         reply_markup=main_menu_keyboard()
     )
     
-    return False  # بلاک شد
+    return False
 
 
 
 async def get_referral_chain(telegram_id: int, max_levels: int = 20) -> list:
-    """
-    دریافت زنجیره معرف‌ها از کاربر به سطح بالا
-    Returns: [{"level": 1, "referrer_id": "123"}, {"level": 2, "referrer_id": "456"}, ...]
-    """
+    """Return the referrer chain with referral levels and user IDs."""
     try:
         chain = []
         current_id = telegram_id
@@ -767,7 +748,7 @@ async def get_referral_chain(telegram_id: int, max_levels: int = 20) -> list:
         
         while level <= max_levels:
 
-            # پیدا کردن referrer فعلی
+
             referrer_id = None
             
             for row in users_rows[1:]:
@@ -777,7 +758,7 @@ async def get_referral_chain(telegram_id: int, max_levels: int = 20) -> list:
                 referrer_id = row[5] if len(row) > 5 and row[5] else None
                 break
             
-            # اگه referrer نداره یا قبلاً دیده شده، تموم شد
+
             if not referrer_id or int(referrer_id) in visited:
                 break
             
@@ -804,11 +785,7 @@ async def get_referral_chain(telegram_id: int, max_levels: int = 20) -> list:
 # REFERRAL SYSTEM
 # ============================================
 async def process_referral_commission(purchase_id: str, buyer_id: int, amount_usd: float):
-    """
-    Process referral commissions - با پشتیبانی افیلیت عمیق
-    سطح ۱ و ۲: مثل همیشه (۸% و ۱۲% یا بوست)
-    سطح ۳+: فقط برای افیلیت‌ها
-    """
+    """Process referral commissions, including deeper levels for eligible affiliates."""
     buyer_result = await find_user(buyer_id)
     if not buyer_result:
         return
@@ -819,7 +796,7 @@ async def process_referral_commission(purchase_id: str, buyer_id: int, amount_us
     if not referrer_id:
         return
     
-    # ✅ دریافت سقف خرید referrer سطح ۱
+
     referrer_max_purchase = await get_user_max_purchase(int(referrer_id))
     cappable_amount = min(amount_usd, referrer_max_purchase) if referrer_max_purchase > 0 else 0
     
@@ -828,7 +805,7 @@ async def process_referral_commission(purchase_id: str, buyer_id: int, amount_us
         return
     
     # ═══════════════════════════════════════════════════════
-    # Level 1: سطح اول (مثل قبل)
+
     # ═══════════════════════════════════════════════════════
     referrer_boost = await get_user_boost(int(referrer_id))
     
@@ -869,11 +846,11 @@ async def process_referral_commission(purchase_id: str, buyer_id: int, amount_us
     except:
         pass
     
-    # بوست خودکار
+
     asyncio.create_task(check_and_grant_auto_boost(int(referrer_id)))
     
     # ═══════════════════════════════════════════════════════
-    # Level 2: سطح دوم (مثل قبل)
+
     # ═══════════════════════════════════════════════════════
     referrer_result = await find_user(int(referrer_id))
     if referrer_result:
@@ -881,12 +858,12 @@ async def process_referral_commission(purchase_id: str, buyer_id: int, amount_us
         level2_referrer_id = referrer_row[5] if len(referrer_row) > 5 else ""
         
         if level2_referrer_id and level2_referrer_id != str(buyer_id):
-            # سقف سطح ۲
+
             level2_max_purchase = await get_user_max_purchase(int(level2_referrer_id))
             level2_cappable_amount = min(amount_usd, level2_max_purchase) if level2_max_purchase > 0 else 0
             
             if level2_cappable_amount > 0:
-                # نرخ
+
                 level2_boost = await get_user_boost(int(level2_referrer_id))
                 
                 if level2_boost:
@@ -926,44 +903,44 @@ async def process_referral_commission(purchase_id: str, buyer_id: int, amount_us
                     pass
     
     # ═══════════════════════════════════════════════════════
-    # Level 3+: افیلیت‌های عمیق (جدید!)
+
     # ═══════════════════════════════════════════════════════
-    # دریافت زنجیره کامل
+
     chain = await get_referral_chain(buyer_id, max_levels=50)
     
-    # پردازش سطح ۳ به بعد
-    for item in chain[2:]:  # از سطح ۳ شروع کن (index 2)
+
+    for item in chain[2:]:
         level = item["level"]
         referrer_id = item["referrer_id"]
         
-        # چک اگه افیلیت هست
+
         affiliate_config = await get_affiliate_config(int(referrer_id))
         
         if not affiliate_config["is_affiliate"]:
-            continue  # افیلیت نیست، بعدی
+            continue
         
-        # چک عمق مجاز
+
         if level > affiliate_config["max_depth"]:
-            break  # از حد مجاز گذشته، تموم
+            break
         
-        # محاسبه پورسانت
-        # سقف: بالاترین خرید این افیلیت
+
+
         affiliate_max_purchase = await get_user_max_purchase(int(referrer_id))
         affiliate_cappable = min(amount_usd, affiliate_max_purchase) if affiliate_max_purchase > 0 else 0
         
         if affiliate_cappable <= 0:
-            continue  # خریدی نداره
+            continue
         
         rate = affiliate_config["rate"] / 100
         commission = affiliate_cappable * rate
         
-        # پرداخت
+
         await update_user_balance(int(referrer_id), commission, add=True)
         
         await append_row("Referrals", [
             str(referrer_id),
             str(buyer_id),
-            str(level),  # سطح ۳، ۴، ۵، ...
+            str(level),
             str(commission),
             "paid",
             purchase_id,
@@ -971,7 +948,7 @@ async def process_referral_commission(purchase_id: str, buyer_id: int, amount_us
             now_iso()
         ])
         
-        # نوتیف (مخفی - فقط به افیلیت)
+
         try:
             await bot.send_message(
                 int(referrer_id),
@@ -1062,11 +1039,11 @@ async def activate_subscription(telegram_id: int, username: str, product: str, p
 async def create_discount_code(code: str, discount_percent: int, max_uses: int, valid_days: int, created_by: int) -> bool:
     """Create a new discount code"""
     try:
-        # چک کد تکراری
+
         rows = await get_all_rows("DiscountCodes")
         for row in rows[1:]:
             if row and row[0].upper() == code.upper():
-                return False  # کد تکراری
+                return False
         
         valid_until = (datetime.utcnow() + timedelta(days=valid_days)).replace(microsecond=0).isoformat()
         
@@ -1104,24 +1081,24 @@ async def validate_discount_code(code: str) -> Optional[Tuple[int, int]]:
             if row[0].upper() != code.upper():
                 continue
             
-            # چک وضعیت
+
             status = row[7] if len(row) > 7 else ""
             if status != "active":
                 return None
             
-            # چک تاریخ انقضا
+
             valid_until = parse_iso(row[4]) if len(row) > 4 else None
             if valid_until and valid_until < now:
                 return None
             
-            # چک تعداد استفاده
+
             max_uses = int(row[2]) if len(row) > 2 and row[2] else 0
             used_count = int(row[3]) if len(row) > 3 and row[3] else 0
             
             if max_uses > 0 and used_count >= max_uses:
                 return None
             
-            # برگرداندن درصد تخفیف و ایندکس
+
             discount = int(row[1]) if len(row) > 1 else 0
             return (discount, idx)
         
@@ -1141,7 +1118,7 @@ async def use_discount_code(code: str) -> bool:
             if not row or row[0].upper() != code.upper():
                 continue
             
-            # افزایش شمارنده
+
             used_count = int(row[3]) if len(row) > 3 and row[3] else 0
             row[3] = str(used_count + 1)
             
@@ -1204,22 +1181,22 @@ async def redeem_gift_card(gift_code: str, recipient_id: int, recipient_username
             if row[0] != gift_code:
                 continue
             
-            # چک وضعیت
+
             status = row[8] if len(row) > 8 else ""
             if status != "pending":
-                return None  # قبلاً استفاده شده
+                return None
             
-            # بررسی خریدار = گیرنده نباشه
+
             buyer_id = int(row[3]) if len(row) > 3 and row[3] else 0
             if buyer_id == recipient_id:
-                return None  # نمیشه خودت استفاده کنی!
+                return None
             
-            # دریافت اطلاعات
+
             product = row[1] if len(row) > 1 else ""
             message = row[7] if len(row) > 7 else ""
             buyer_username = row[4] if len(row) > 4 else "کاربر"
             
-            # آپدیت وضعیت
+
             row[6] = recipient_username
             row[5] = str(recipient_id)
             row[8] = "redeemed"
@@ -1227,17 +1204,17 @@ async def redeem_gift_card(gift_code: str, recipient_id: int, recipient_username
             
             await update_row("GiftCards", idx, row)
 
-            # ✅ مورد ۲: اضافه گیرنده به عنوان معرف سطح ۱ خریدار
+
             try:
-                # پیدا کردن یا ساخت یوزر گیرنده
+
                 recipient_result = await find_user(recipient_id)
     
                 if recipient_result:
                     recipient_row_idx, recipient_row = recipient_result
         
-                    # اگه قبلاً کسی معرفش نکرده
-                    if not recipient_row[5]:  # referred_by خالی باشه
-                        recipient_row[5] = str(buyer_id)  # خریدار رو به عنوان معرف ست کن
+
+                    if not recipient_row[5]:
+                        recipient_row[5] = str(buyer_id)
                         await update_row("Users", recipient_row_idx, recipient_row)
                         logger.info(f"✅ Set {buyer_id} as referrer for gift recipient {recipient_id}")
     
@@ -1256,7 +1233,7 @@ async def redeem_gift_card(gift_code: str, recipient_id: int, recipient_username
 async def create_boost_code(code: str, level1_percent: int, level2_percent: int, max_uses: int, valid_days: int, created_by: int) -> bool:
     """Create a new boost code (secret commission boost)"""
     try:
-        # چک کد تکراری
+
         rows = await get_all_rows("BoostCodes")
         for row in rows[1:]:
             if row and row[0].upper() == code.upper():
@@ -1297,44 +1274,44 @@ async def validate_and_apply_boost(code: str, telegram_id: int) -> Optional[Dict
             if row[0].upper() != code.upper():
                 continue
             
-            # چک وضعیت
+
             status = row[8] if len(row) > 8 else ""
             if status != "active":
                 return None
             
-            # چک تاریخ انقضا
+
             valid_until = parse_iso(row[5]) if len(row) > 5 else None
             if valid_until and valid_until < now:
                 return None
             
-            # چک تعداد استفاده
+
             max_uses = int(row[3]) if len(row) > 3 and row[3] else 0
             used_count = int(row[4]) if len(row) > 4 and row[4] else 0
             if max_uses > 0 and used_count >= max_uses:
                 return None
             
-            # دریافت درصدها
+
             level1_percent = int(row[1]) if len(row) > 1 and row[1] else 8
             level2_percent = int(row[2]) if len(row) > 2 and row[2] else 12
             
-            # چک اگه این کاربر قبلاً این کد رو فعال کرده
+
             users_rows = await get_all_rows("Users")
             for u_idx, u_row in enumerate(users_rows[1:], start=2):
                 if u_row and str(u_row[0]) == str(telegram_id):
-                    # نگه داشتن بوست در فیلد notes (فیلد ۱۰ به بعد)
-                    # چک اگه قبلاً بوستی داره
+
+
                     if len(u_row) > 10 and u_row[10] and u_row[10].startswith("boost:"):
                         return {"error": "already_boosted"}
                     break
             
-            # افزایش شمارنده استفاده
+
             row[4] = str(used_count + 1)
             await update_row("BoostCodes", idx, row)
             
-            # ذخیره بوست در فیلد اضافی کاربر
+
             for u_idx, u_row in enumerate(users_rows[1:], start=2):
                 if u_row and str(u_row[0]) == str(telegram_id):
-                    # اضافه فیلد بوست
+
                     while len(u_row) < 11:
                         u_row.append("")
                     u_row[10] = f"boost:{code}:{level1_percent}:{level2_percent}"
@@ -1365,10 +1342,10 @@ async def get_user_boost(telegram_id: int) -> Optional[Dict[str, int]]:
         
         _, row = result
         
-        # چک فیلد بوست (فیلد ۱۰)
+
         if len(row) > 10 and row[10] and row[10].startswith("boost:"):
             parts = row[10].split(":")
-            # فرمت: boost:CODE:L1_PERCENT:L2_PERCENT
+
             if len(parts) >= 4:
                 return {
                     "code": parts[1],
@@ -1383,12 +1360,9 @@ async def get_user_boost(telegram_id: int) -> Optional[Dict[str, int]]:
         return None
 
 async def check_and_grant_auto_boost(telegram_id: int):
-    """
-    چک و اعطای بوست خودکار ۱۰ رفرال
-    این بوست مستقل از بوست دستی ادمین هست
-    """
+    """Grant the automatic boost after ten direct referrals."""
     try:
-        # ✅ چک اگه قبلاً بوست اتومات گرفته
+
         result = await find_user(telegram_id)
         if not result:
             return
@@ -1396,11 +1370,11 @@ async def check_and_grant_auto_boost(telegram_id: int):
         _, user_row = result
         boost_data = user_row[10] if len(user_row) > 10 else ""
         
-        # اگه بوست با AUTO10_ داره = قبلاً گرفته
+
         if boost_data and "AUTO10_" in boost_data:
             return
         
-        # شمارش رفرال‌های سطح ۱
+
         referrals_rows = await get_all_rows("Referrals")
         direct_referrals = 0
         
@@ -1419,7 +1393,7 @@ async def check_and_grant_auto_boost(telegram_id: int):
         level1_percent = 10
         level2_percent = 15
         
-        # ساخت کد
+
         success = await create_boost_code(
             code=boost_code,
             level1_percent=level1_percent,
@@ -1432,18 +1406,18 @@ async def check_and_grant_auto_boost(telegram_id: int):
         if not success:
             return
         
-        # ✅ ثبت در Users
+
         users_rows = await get_all_rows("Users")
         for u_idx, u_row in enumerate(users_rows[1:], start=2):
             if u_row and str(u_row[0]) == str(telegram_id):
                 current_boost = u_row[10] if len(u_row) > 10 else ""
                 
-                # اگه بوست دستی داره (شروع با boost: ولی نه AUTO)
+
                 if current_boost and current_boost.startswith("boost:") and "AUTO10_" not in current_boost:
-                    # بوست دستی داره - note کن
+
                     u_row[10] = current_boost + f"|auto:{boost_code}"
                 else:
-                    # بوست نداره - بوست اتومات بذار
+
                     while len(u_row) < 11:
                         u_row.append("")
                     u_row[10] = f"boost:{boost_code}:{level1_percent}:{level2_percent}"
@@ -1459,7 +1433,7 @@ async def check_and_grant_auto_boost(telegram_id: int):
                         break
                 break
         
-        # پیام به کاربر
+
         try:
             await bot.send_message(
                 telegram_id,
@@ -1474,7 +1448,7 @@ async def check_and_grant_auto_boost(telegram_id: int):
         except:
             pass
         
-        # نوتیف ادمین
+
         if ADMIN_TELEGRAM_ID:
             try:
                 await bot.send_message(
@@ -1506,7 +1480,7 @@ async def calculate_dashboard_stats() -> Dict[str, Any]:
         
         # ============ Users Stats ============
         users_rows = await get_all_rows("Users")
-        total_users = len(users_rows) - 1  # منهای header
+        total_users = len(users_rows) - 1
         
         users_today = 0
         users_week = 0
@@ -1567,8 +1541,8 @@ async def calculate_dashboard_stats() -> Dict[str, Any]:
         pending_count = 0
         rejected_count = 0
         
-        daily_revenue = {}  # برای پیدا کردن بهترین روز
-        hourly_revenue = {}  # برای پیدا کردن بهترین ساعت
+        daily_revenue = {}
+        hourly_revenue = {}
         
         for row in purchases_rows[1:]:
             if not row or len(row) < 11:
@@ -1581,7 +1555,7 @@ async def calculate_dashboard_stats() -> Dict[str, Any]:
                 approved_count += 1
                 total_revenue += amount
                 
-                # تاریخ تایید
+
                 approved_at = parse_iso(row[10]) if len(row) > 10 else None
                 if approved_at:
                     if approved_at >= today_start:
@@ -1589,11 +1563,11 @@ async def calculate_dashboard_stats() -> Dict[str, Any]:
                     if approved_at >= week_start:
                         revenue_week += amount
                     
-                    # آمار روزانه
+
                     day_name = approved_at.strftime("%A")  # Monday, Tuesday, ...
                     daily_revenue[day_name] = daily_revenue.get(day_name, 0) + amount
                     
-                    # آمار ساعتی
+
                     hour = approved_at.hour
                     hourly_revenue[hour] = hourly_revenue.get(hour, 0) + amount
             
@@ -1604,10 +1578,10 @@ async def calculate_dashboard_stats() -> Dict[str, Any]:
         
         avg_purchase = total_revenue / approved_count if approved_count > 0 else 0
         
-        # بهترین روز
+
         best_day = max(daily_revenue.items(), key=lambda x: x[1])[0] if daily_revenue else "N/A"
         
-        # بهترین ساعت
+
         if hourly_revenue:
             best_hour = max(hourly_revenue.items(), key=lambda x: x[1])[0]
             best_hour_range = f"{best_hour:02d}:00-{(best_hour+1):02d}:00"
@@ -1627,11 +1601,11 @@ async def calculate_dashboard_stats() -> Dict[str, Any]:
         }
         
         # ============ Conversion Rates ============
-        # تست → خرید
+
         test_purchases = sum(1 for row in purchases_rows[1:] if row and len(row) > 3 and row[3] == "test")
         test_to_purchase_rate = (approved_count / test_purchases * 100) if test_purchases > 0 else 0
         
-        # معمولی → ویژه
+
         normal_to_premium_rate = (premium_subs / (normal_subs + premium_subs) * 100) if (normal_subs + premium_subs) > 0 else 0
         
         stats['conversion'] = {

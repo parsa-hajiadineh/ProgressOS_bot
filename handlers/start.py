@@ -37,7 +37,7 @@ async def cmd_start(message: types.Message):
     user = message.from_user
     args = message.get_args()
 
-    # چک اگر لینک هدیه است
+
     if args and args.startswith("gift_"):
         gift_code = args.replace("gift_", "")
     
@@ -47,10 +47,10 @@ async def cmd_start(message: types.Message):
         if result:
             product, gift_message, buyer_username = result
         
-            # فعال‌سازی اشتراک
+
             await activate_subscription(user.id, user.username or "", product, "gift")
         
-            # پیام به گیرنده
+
             await reply_and_record(
                 message,
                 f"🎊 <b>تبریک! هدیه دریافت شد!</b>\n\n"
@@ -63,7 +63,7 @@ async def cmd_start(message: types.Message):
                 reply_markup=main_menu_keyboard()
             )
         
-            # پیام به خریدار
+
             buyer_id = None
             rows = await get_all_rows("GiftCards")
             for row in rows[1:]:
@@ -93,10 +93,10 @@ async def cmd_start(message: types.Message):
             )
             return
 
-    # ✅ فیکس #2: چک عضویت کانال فقط اگه لینک هدیه نیست
-    # (برای لینک هدیه چک عضویت نمیخواد چون هنوز ثبت‌نام نکرده)
+
+
     if not (args and args.startswith("gift_")):
-        # ✅ اول از همه چک عضویت کانال
+
         is_member, missing = await check_required_channels(user.id)
         
         if not is_member:
@@ -111,14 +111,14 @@ async def cmd_start(message: types.Message):
             )
             return
     
-    # ✅ چک کردن یوزر در دیتابیس
+
     result = await find_user(user.id)
     
     if result:
         row_idx, row = result
         email = row[3] if len(row) > 3 else ""
         
-        # اگر ایمیل نداره، بگیر
+
         if not email:
             user_states[user.id] = {"state": "awaiting_email", "attempt": 1}
             await send_and_record(
@@ -130,9 +130,9 @@ async def cmd_start(message: types.Message):
             )
             return
     else:
-        # ✅ یوزر جدیده - ثبت کن
+
         referred_by = ""
-        # ✅ فیکس #1: لینک هدیه رو به عنوان رفرال حساب نکن
+
         if args and not args.startswith("gift_"):
             rows = await get_all_rows("Users")
             for r in rows[1:]:
@@ -144,19 +144,19 @@ async def cmd_start(message: types.Message):
             str(user.id),
             user.username or "",
             user.full_name or "",
-            "",  # ایمیل خالی
+            "",
             generate_referral_code(),
             referred_by,
             "0",
             "active",
             now_iso(),
             now_iso(),
-            ""  # ✅ فیکس #1: فیلد ۱۱ boost_data
+            ""
         ]
         
         await append_row("Users", new_row)
         
-        # درخواست ایمیل
+
         user_states[user.id] = {"state": "awaiting_email", "attempt": 1}
         await send_and_record(
             user.id,
@@ -166,9 +166,9 @@ async def cmd_start(message: types.Message):
             trigger=message,
             parse_mode="HTML"
         )
-        return  # ✅ فیکس #1: این return ضروریه!
+        return
 
-    # ✅ تشخیص ادمین و تعیین منو و پیام
+
     if is_admin(user.id):
         menu_kb = admin_menu_keyboard()
         greeting = f"👋 <b>سلام {user.full_name}!</b>\n\n🔐 <b>پنل ادمین</b>"
@@ -176,7 +176,7 @@ async def cmd_start(message: types.Message):
         menu_kb = main_menu_keyboard()
         greeting = f"👋 <b>سلام {user.full_name}!</b>"
     
-    # ✅ نمایش منوی اصلی
+
     subscription = await get_active_subscription(user.id)
     
     if subscription:
@@ -196,7 +196,7 @@ async def cmd_start(message: types.Message):
             reply_markup=menu_kb
         )
     else:
-        # فیکس: پیام رو قبل از f-string بساز (جلوگیری از syntax error)
+
         if is_admin(user.id):
             status_msg = "از منوی مدیریت استفاده کنید:"
         else:
@@ -213,7 +213,7 @@ async def cmd_start(message: types.Message):
 
 @dp.message_handler(commands=["amiadmin"])
 async def cmd_am_i_admin(message: types.Message):
-    """تست ادمین بودن"""
+    """Display the current user admin status."""
     user_id = message.from_user.id
     
     admin1 = os.getenv("ADMIN_TELEGRAM_ID")
@@ -338,11 +338,11 @@ async def handle_test_channel(message: types.Message):
     """Test channel handler"""
     user = message.from_user
     
-    # ✅ چک عضویت
+
     if not await check_membership_for_all_messages(message):
         return
 
-    # ✅ چک رزرو
+
     if not await check_reserve_block(message):
         return
     

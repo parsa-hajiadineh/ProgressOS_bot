@@ -68,7 +68,7 @@ async def handle_wallet(message: types.Message):
 
 @dp.callback_query_handler(lambda c: c.data == "complete_reserve")
 async def callback_complete_reserve(callback: types.CallbackQuery):
-    """تکمیل پیش‌پرداخت"""
+    """Complete a reservation payment."""
     user = callback.from_user
     
     reserve = await get_user_reserve_status(user.id)
@@ -82,7 +82,7 @@ async def callback_complete_reserve(callback: types.CallbackQuery):
     total = PREMIUM_PRICE if product == "premium" else NORMAL_PRICE
     remaining = total - paid
     
-    # روش پرداخت
+
     kb = payment_method_keyboard(f"complete_{product}")
     
     await callback.message.edit_text(
